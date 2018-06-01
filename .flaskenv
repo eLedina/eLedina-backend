@@ -1,0 +1,3 @@
+FLASK_RUN_PORT=8080
+FLASK_RUN_HOST=localhost
+
