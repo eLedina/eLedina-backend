@@ -1,5 +1,22 @@
 # Project files, etc...
 .idea/
 
+
+# Files that might include sensitive info
+*.ini
+.env
+
+
 # Cache, ...
 **/__pycache__/
+
+
+# Files generated on the fly
+static/
+!static/NOTE.md
+templates/
+!templates/NOTE.md
+
+# EXAMPLES from templates/
+!templates/404_example.html
+!templates/index_example.html
