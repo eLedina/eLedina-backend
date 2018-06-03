@@ -6,6 +6,8 @@
 *.ini
 .env
 
+!*_example.ini
+
 
 # Cache, ...
 **/__pycache__/
