@@ -8,7 +8,7 @@ app = Flask(__name__)
 # index.html
 @app.route("/")
 def index():
-    return render_template("index_example.html", ip=request.remote_addr)
+    return render_template("index.html", ip=request.remote_addr)
 
 
 # REGISTER BLUEPRINTS
