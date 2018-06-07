@@ -14,10 +14,30 @@ def index():
 def designPage():
     return render_template("design_page.html", ip=request.remote_addr)
 	
-# login_page.html
+# login.html
 @app.route("/login")
 def login():
     return render_template("login.html", ip=request.remote_addr)
+	
+# register.html
+@app.route("/register")
+def register():
+    return render_template("registration.html", ip=request.remote_addr)
+	
+# home.html
+@app.route("/home")
+def home():
+    return render_template("home.html", ip=request.remote_addr)
+	
+# Blog.html
+@app.route("/blog_main")
+def blogMain():
+    return render_template("blog_mainpage.html", ip=request.remote_addr)
+	
+# Blog_temporary.html
+@app.route("/blogtemp")
+def blogTemp():
+    return render_template("blogs/blog_sample.html", ip=request.remote_addr)
 
 # REGISTER BLUEPRINTS
 from eledina.basic_pages import basic_pages
