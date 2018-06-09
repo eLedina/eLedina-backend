@@ -13,3 +13,10 @@ class ForbiddenArgument(BackendException):
     Raised when an argument is invalid -> too long, invalid email, ...
     """
     pass
+
+
+class LoginFailed(BackendException):
+    """
+    Raised when wrong login info is provided
+    """
+    pass

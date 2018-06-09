@@ -1,6 +1,9 @@
 # coding=utf-8
 from flask.wrappers import Response
-from ujson import dumps
+try:
+    from ujson import dumps
+except ImportError:
+    from json import dumps
 
 
 def jsonify_response(json, resp_code: int=200):

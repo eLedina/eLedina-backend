@@ -3,9 +3,10 @@ import redis
 from passlib.hash import pbkdf2_sha512
 
 from .config import redis_config, SALT, ROUNDS
-from .util import is_email, gen_id
-from .exceptions import ForbiddenArgument
+from .util import is_email, gen_id, gen_token
+from .exceptions import ForbiddenArgument, LoginFailed
 from .input_limits import UserLimits
+from .types_ import Role
 
 
 def get_redis_config(section):
@@ -47,6 +48,7 @@ class Users:
             about: str
             email: str
             password: str
+            role: int
 
         TODO \/
         RedisCache provides links:
@@ -54,6 +56,16 @@ class Users:
                 <username>:<user_id>
             user_by_email (Hash)
                 <email>:<user_id>
+
+
+    Tokens are available in:
+
+        RedisData under multiple keys:
+            auth:by_token (Hash)
+                <token>: <userid>
+            auth:by_user (Hash)
+                <userid>: <token: str>
+
     """
     @staticmethod
     def _hash_password(password: str) -> str:
@@ -70,8 +82,21 @@ class Users:
         hashed = self._get_hashed_password(user_id)
         return pbkdf2_sha512.verify(password, hashed)
 
+    def _change_token(self, user_id: int, new_token: str):
+        # raise NotImplementedError
+        current_token = rd.hget("auth:by_user", user_id)
+
+        pipe = rd.pipeline()
+        # Old token needs to be deleted first
+        pipe.hdel("auth:by_token", current_token)
+        pipe.hset("auth:by_token", new_token, user_id)
+        # Can be overwritten
+        pipe.hset("auth:by_user", user_id, new_token)
+
+        pipe.execute()
+
     # USER CREATION
-    def new_user(self, username: str, fullname: str, email: str, password: str):
+    def register_user(self, username: str, fullname: str, email: str, password: str):
         """
         Registers a new user
 
@@ -92,10 +117,42 @@ class Users:
             "fullname": fullname,
             "email": email,
             "password": self._hash_password(password)
+            # role defaults to USER (0)
+            # about defaults to empty
         }
         user_id = gen_id()
 
         rd.hmset(f"user:{user_id}", payload)
+
+    # METHODS THAT OPERATE WITH TOKENS
+    def login_user(self, email: str, password: str) -> str:
+        """
+        Logs in the user with the provided email and password.
+
+        :return: Token to be used on sequential requests
+        """
+        # Get userid from email
+        if len(email) > UserLimits.EMAIL_MAX_LENGTH:
+            raise ForbiddenArgument("invalid email")
+
+        user_id = rc.hget("user_by_email", email)
+
+        # Verify password
+        if not self._verify_password(password, user_id):
+            raise LoginFailed("wrong password/email")
+
+        new_token = gen_token()
+        self._change_token(user_id, new_token)
+
+        return new_token
+
+    @staticmethod
+    def verify_token(token: str):
+        """
+        Returns a userid from the provided token - used on requests with restricted access to verify user
+        :return: user id
+        """
+        return rd.hget("auth:by_token", token)
 
     # THESE FUNCTIONS NEED ID'S
     def get_username(self, user_id):

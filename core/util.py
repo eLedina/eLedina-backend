@@ -1,5 +1,6 @@
 # coding=utf-8
 import uuid
+import secrets
 import re
 import datetime
 
@@ -18,7 +19,7 @@ class Singleton(type):
 
 def gen_id(byte_size=25):
     """
-    Generate a unique id:
+    Generate a 'unique' id:
         secondsSinceYear+randomBits
     """
     today = datetime.datetime.now()
@@ -27,6 +28,13 @@ def gen_id(byte_size=25):
     td = int((today - year).total_seconds())
     gen = str(uuid.uuid4().int)[:byte_size]
     return int(str(td) + gen)
+
+
+def gen_token():
+    """
+    Generate an access token (64 bits)
+    """
+    return secrets.token_urlsafe(64)
 
 
 EMAIL_EXP = re.compile(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)")
