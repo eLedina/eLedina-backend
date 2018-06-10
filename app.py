@@ -47,6 +47,16 @@ def blogWrite():
 @app.route("/blogtemp")
 def blogTemp():
     return render_template("blogs/blog_sample.html", ip=request.remote_addr)
+	
+
+# oral_exam.html
+@app.route("/oral_exam")
+def oralExam():
+    return render_template("oral_exam.html", ip=request.remote_addr)
+	
+@app.route("/oral_exam_list")
+def oralExamList():
+    return render_template("oral_exam_list.html", ip=request.remote_addr)
 
 	
 # REGISTER BLUEPRINTS
