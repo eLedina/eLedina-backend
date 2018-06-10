@@ -4,7 +4,7 @@ import os
 import shutil
 
 # Verify data dir exists
-DATA_DIR = os.path.join("..", "data")
+DATA_DIR = "data"
 
 REDIS_CONFIG_PATH = os.path.join(DATA_DIR, "redis.ini")
 AUTH_CONFIG_PATH = os.path.join(DATA_DIR, "auth.ini")
@@ -32,5 +32,5 @@ auth_config = configparser.ConfigParser()
 auth_config.read(AUTH_CONFIG_PATH)
 
 # For convenience
-SALT = auth_config.read("Crypto", "salt")
-ROUNDS = auth_config.read("Crypto", "rounds")
+SALT = bytes(auth_config.get("Crypto", "salt"), encoding="utf-8")
+ROUNDS = auth_config.getint("Crypto", "rounds")

@@ -3,7 +3,7 @@ import redis
 from passlib.hash import pbkdf2_sha512
 
 from .config import redis_config, SALT, ROUNDS
-from .util import is_email, gen_id, gen_token
+from .util import is_email, gen_id, gen_token, Singleton
 from .exceptions import ForbiddenArgument, LoginFailed
 from .input_limits import UserLimits
 from .types_ import Role
@@ -38,13 +38,13 @@ rc = redis.Redis(host=c_host, port=c_port,
                  password=c_pass, db=c_db)
 
 
-class Users:
+class Users(metaclass=Singleton):
     """
     Users are available in:
 
         RedisData under user:<id> (Hash)
             username: str
-            fullname: str
+            fullname: str (name and surname split with '|')
             about: str
             email: str
             password: str
@@ -99,8 +99,6 @@ class Users:
     def register_user(self, username: str, fullname: str, email: str, password: str):
         """
         Registers a new user
-
-        username: str(
         """
         # Checks
         if not is_email(email) or len(email) > UserLimits.EMAIL_MAX_LENGTH:
@@ -120,9 +118,15 @@ class Users:
             # role defaults to USER (0)
             # about defaults to empty
         }
+        # Generate id and set info
         user_id = gen_id()
-
         rd.hmset(f"user:{user_id}", payload)
+
+        # Generate and return token
+        new_token = gen_token()
+        self._change_token(user_id, new_token)
+
+        return new_token
 
     # METHODS THAT OPERATE WITH TOKENS
     def login_user(self, email: str, password: str) -> str:

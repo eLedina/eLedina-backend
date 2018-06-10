@@ -15,6 +15,9 @@ def index():
 from eledina.basic_pages import basic_pages
 app.register_blueprint(basic_pages)
 
+from eledina.api.api_blueprint import api
+app.register_blueprint(api)
+
 if __name__ == '__main__':
     app.run(load_dotenv=True)
 

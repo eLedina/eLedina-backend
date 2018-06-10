@@ -6,6 +6,14 @@ basic_pages = Blueprint("basic_pages", __name__,
                         static_folder="../static/", template_folder="../templates/")
 
 
-@basic_pages.route("/404")
-def basic():
-    return render_template("404_example.html")
+# TODO disable this
+
+# This renders all pages normally
+@basic_pages.route("/<path:template>")
+def render(template):
+    t = str(template)
+
+    if not t.endswith(".html"):
+        t += ".html"
+
+    return render_template(t)

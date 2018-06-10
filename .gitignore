@@ -4,9 +4,15 @@
 
 # Files that might include sensitive info
 *.ini
-.env
-
 !*_example.ini
+
+*.bat
+!*_example.bat
+
+*.conf
+!*_example.conf
+
+.env
 
 
 # Cache, ...
