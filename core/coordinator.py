@@ -1,5 +1,5 @@
 # coding=utf-8
-from .redis import Users
+from .models import Users
 
 
 class Coordinator:

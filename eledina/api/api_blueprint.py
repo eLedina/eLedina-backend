@@ -9,7 +9,9 @@ except ImportError:
 
 from ..flask_util import jsonify_response
 from .bucket import ip_rate_limit, token_rate_limit
-from core.redis import Users
+from core.exceptions import UserAlreadyExists
+from core.models import Users
+from core.cachemanager import CacheGenerator
 
 
 __version__ = "0.1.0"
@@ -21,6 +23,7 @@ api = Blueprint("api", __name__,
 
 
 users = Users()
+CacheGenerator().generate_cache()
 
 
 # AUTHENTICATION

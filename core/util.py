@@ -45,3 +45,52 @@ def is_email(email: str) -> bool:
     Checks an email to see if it is a valid address
     """
     return EMAIL_EXP.match(email) is not None
+
+
+# REDIS DECODE FUNCTIONS
+def decode(c):
+    if c is None:
+        return None
+
+    return boolify(decode_auto(c))
+
+
+def boolify(s):
+    if s == "True":
+        return True
+    if s == "False":
+        return False
+    if s == "None":
+        return None
+
+    return s
+
+
+def decode_auto(some):
+    """
+    Converts/decodes all kinds of types (mostly bytes) into their expected types
+    """
+    if isinstance(some, bytes):
+        return decode_auto(some.decode())
+
+    if isinstance(some, str):
+        # Auto-convert numbers to int
+        if some.isnumeric():
+            return int(some)
+
+        return boolify(some)
+
+    if isinstance(some, int):
+        return some
+
+    if isinstance(some, dict):
+        return dict(map(decode_auto, some.items()))
+    if isinstance(some, tuple):
+        return tuple(map(decode_auto, some))
+    if isinstance(some, list):
+        return list(map(decode_auto, some))
+    if isinstance(some, set):
+        return set(map(decode_auto, some))
+
+    # If it's some other type, return it as is
+    return some
