@@ -5,7 +5,12 @@ from flask import Blueprint, render_template
 basic_pages = Blueprint("basic_pages", __name__,
                         static_folder="../static/", template_folder="../templates/")
 
+# This renders all pages normally
+@basic_pages.route("/<path:template>")
+def render(template):
+    t = str(template)
 
-@basic_pages.route("/404")
-def basic():
-    return render_template("404_example.html")
+    if not t.endswith(".html"):
+        t += ".html"
+
+    return render_template(t)

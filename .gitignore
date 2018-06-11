@@ -4,7 +4,17 @@
 
 # Files that might include sensitive info
 *.ini
+!*_example.ini
+
+*.bat
+!*_example.bat
+
+*.conf
+!*_example.conf
+
 .env
+*.aof
+*.rdb
 
 
 # Cache, ...

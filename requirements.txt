@@ -1,2 +1,6 @@
 flask~=1.0.2
 python-dotenv~=0.8.2
+passlib~=1.7.1
+
+redis~=2.10.6
+ujson~=1.35
