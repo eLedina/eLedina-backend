@@ -142,12 +142,17 @@ def register():
         return
 
     # Additionally verifies data
-    token = users.register_user(username, fullname, email, password)
-
-    payload = {
-        "status": "OK",
-        "token": token,
-    }
+    try:
+        token = users.register_user(username, fullname, email, password)
+    except UserAlreadyExists:
+        payload = {
+            "status": "USER_ALREADY_EXISTS",
+        }
+    else:
+        payload = {
+            "status": "OK",
+            "token": token,
+        }
 
     return jsonify_response(payload)
 

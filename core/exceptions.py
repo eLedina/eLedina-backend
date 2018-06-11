@@ -20,3 +20,10 @@ class LoginFailed(BackendException):
     Raised when wrong login info is provided
     """
     pass
+
+
+class UserAlreadyExists(BackendException):
+    """
+    Raised while registering when a username already exists
+    """
+    pass
