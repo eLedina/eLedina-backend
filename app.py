@@ -11,10 +11,10 @@ logging.basicConfig(level=logging.INFO)
 def index():
     return render_template("index.html", ip=request.remote_addr)
 
-	
+
 # REGISTER BLUEPRINTS
-from eledina.basic_pages import basic_pages
-app.register_blueprint(basic_pages)
+from eledina.pages import pages
+app.register_blueprint(pages)
 
 from eledina.api.api_blueprint import api
 app.register_blueprint(api)

@@ -8,7 +8,7 @@ from .input_limits import UserLimits
 from .config import SALT, ROUNDS
 
 
-from .redis import rd, rc
+from .redis import RedisData, RedisCache
 
 
 class Users(metaclass=Singleton):
@@ -41,6 +41,10 @@ class Users(metaclass=Singleton):
                 <userid>: <token: str>
 
     """
+    def __init__(self):
+        self.rd = RedisData()
+        self.rc = RedisCache()
+
     @staticmethod
     def _hash_password(password: str) -> str:
         """
@@ -56,12 +60,11 @@ class Users(metaclass=Singleton):
         hashed = self._get_hashed_password(user_id)
         return pbkdf2_sha512.verify(password, hashed)
 
-    @staticmethod
-    def _change_token(user_id: int, new_token: str):
+    def _change_token(self, user_id: int, new_token: str):
         # TODO token expiration
-        current_token = rd.hget("auth:by_user", user_id)
+        current_token = self.rd.hget("auth:by_user", user_id)
 
-        pipe = rd.pipeline()
+        pipe = self.rd.pipeline()
         # Old token needs to be deleted first
         pipe.hdel("auth:by_token", current_token)
         pipe.hset("auth:by_token", new_token, user_id)
@@ -70,9 +73,8 @@ class Users(metaclass=Singleton):
 
         pipe.execute()
 
-    @staticmethod
-    def _user_exists(username: str):
-        return rc.hexists("user:by_username", username)
+    def _user_exists(self, username: str):
+        return self.rc.hexists("user:by_username", username)
 
     # USER CREATION
     def register_user(self, username: str, fullname: str, email: str, password: str):
@@ -100,7 +102,7 @@ class Users(metaclass=Singleton):
         }
         # Generate id and set info
         user_id = gen_id()
-        rd.hmset(f"user:{user_id}", payload)
+        self.rd.hmset(f"user:{user_id}", payload)
 
         # Generate and return token
         new_token = gen_token()
@@ -119,7 +121,7 @@ class Users(metaclass=Singleton):
         if len(email) > UserLimits.EMAIL_MAX_LENGTH:
             raise ForbiddenArgument("invalid email")
 
-        user_id = rc.hget("user_by_email", email)
+        user_id = self.rc.hget("user_by_email", email)
 
         # Verify password
         if not self._verify_password(password, user_id):
@@ -130,13 +132,12 @@ class Users(metaclass=Singleton):
 
         return new_token
 
-    @staticmethod
-    def verify_token(token: str):
+    def verify_token(self, token: str):
         """
         Returns a userid from the provided token - used on requests with restricted access to verify user
         :return: user id
         """
-        return rd.hget("auth:by_token", token)
+        return self.rd.hget("auth:by_token", token)
 
     # THESE FUNCTIONS NEED ID'S
     def get_username(self, user_id):
