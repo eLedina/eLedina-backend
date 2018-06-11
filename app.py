@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO)
 def index():
     return render_template("index.html", ip=request.remote_addr)
 
-
+	
 # REGISTER BLUEPRINTS
 from eledina.basic_pages import basic_pages
 app.register_blueprint(basic_pages)
@@ -21,4 +21,3 @@ app.register_blueprint(api)
 
 if __name__ == '__main__':
     app.run(load_dotenv=True)
-

@@ -5,9 +5,6 @@ from flask import Blueprint, render_template
 basic_pages = Blueprint("basic_pages", __name__,
                         static_folder="../static/", template_folder="../templates/")
 
-
-# TODO disable this
-
 # This renders all pages normally
 @basic_pages.route("/<path:template>")
 def render(template):
