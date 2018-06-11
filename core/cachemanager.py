@@ -2,7 +2,7 @@
 import logging
 
 from .util import Singleton, decode
-from .redis import rd, rc
+from .redis import RedisData, RedisCache
 
 
 log = logging.getLogger(__name__)
@@ -23,42 +23,40 @@ class CacheGenerator(metaclass=Singleton):
         # TODO
     """
     def __init__(self):
-        pass
+        self.rd = RedisData()
+        self.rc = RedisCache()
 
-    @staticmethod
-    def _wipe_cache():
+    def _wipe_cache(self):
         """
         Wipes the whole RedisCache database.
         """
-        log.warning("Wiping cache!")
-        rc.flushdb()
-        log.warning("Cache wiped!")
+        self.rc.flushdb()
+        log.warning("RedisCache wiped!")
 
     def generate_cache(self):
         self._wipe_cache()
+
+        # "Premature optimization is the root of all evil" - Donald Knuth
 
         # USER cache
         # user:by_username and user:by_email
         count = 0
         log.info("Generating user cache...")
 
-        for key in rd.scan_iter(match="user:*"):
+        for key in self.rd.scan_iter(match="user:*"):
             key = bytes(key).decode(encoding="utf-8")
             user_id = key.split(":", maxsplit=1)[1]
             log.info(f"Processing {user_id}")
             count += 1
 
-            user = decode(rd.hgetall(key))
+            user = decode(self.rd.hgetall(key))
 
             username = user.get("name")
             email = user.get("email")
 
-            rc.hset("user:by_username", username, user_id)
-            rc.hset("user:by_email", email, user_id)
+            self.rc.hset("user:by_username", username, user_id)
+            self.rc.hset("user:by_email", email, user_id)
 
         log.info(f"Generated user cache with {count} entries.")
 
-
         # TODO
-
-

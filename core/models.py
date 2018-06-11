@@ -24,7 +24,6 @@ class Users(metaclass=Singleton):
             role: int
             reg_on: int
 
-        TODO \/
         RedisCache provides links:
             user:by_username (Hash)
                 <username>:<user_id>

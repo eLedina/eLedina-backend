@@ -31,7 +31,7 @@ Database layout:
 
 class RedisData(redis.Redis, metaclass=Singleton):
     def __init__(self):
-        log.info("Creating instance of RedisData")
+        log.debug("Creating instance of RedisData")
         d_host, d_port, d_pass, d_db = get_redis_config("RedisData")
 
         super().__init__(host=d_host, port=d_port,
@@ -49,7 +49,7 @@ class RedisData(redis.Redis, metaclass=Singleton):
 
 class RedisCache(redis.Redis, metaclass=Singleton):
     def __init__(self):
-        log.info("Creating instance of RedisCache")
+        log.debug("Creating instance of RedisCache")
         d_host, d_port, d_pass, d_db = get_redis_config("RedisCache")
 
         super().__init__(host=d_host, port=d_port,
