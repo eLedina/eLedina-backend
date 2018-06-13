@@ -10,12 +10,17 @@ pages = Blueprint("pages", __name__,
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
+# Extensions to not append .html to
+valid_extensions = (
+    ".ico",
+)
+
 
 # This renders all pages normally
 @pages.route("/<path:template>")
 def page_render(template):
     t = str(template)
-    if not t.endswith(".html"):
+    if not t.endswith(".html") and not t.endswith(valid_extensions):
         t += ".html"
 
     t_full = os.path.join("templates", t)
