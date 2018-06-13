@@ -9,9 +9,10 @@ except ImportError:
 
 from ..flask_util import jsonify_response
 from .bucket import ip_rate_limit, token_rate_limit
-from core.exceptions import UserAlreadyExists
+from core.exceptions import UserAlreadyExists, ForbiddenArgument, LoginFailed
 from core.models import Users
 from core.cachemanager import CacheGenerator
+from core.types_ import JsonStatus
 
 
 __version__ = "0.1.0"
@@ -146,11 +147,11 @@ def register():
         token = users.register_user(username, fullname, email, password)
     except UserAlreadyExists:
         payload = {
-            "status": "USER_ALREADY_EXISTS",
+            "status": JsonStatus.USER_ALREADY_EXISTS,
         }
     else:
         payload = {
-            "status": "OK",
+            "status": JsonStatus.OK,
             "token": token,
         }
 
@@ -160,8 +161,38 @@ def register():
 @api.route("/login", methods=["POST"])
 @ip_rate_limit
 def login():
+    """
+    Login the user
+
+    Fields: email, password
+    :return:
+    """
     body = loads(request.data)
 
     # TODO
+    try:
+        email = body["email"]
+        password = body["password"]
+    except KeyError:
+        abort(400, dict(description="Missing fields!"))
+        return
+
+    try:
+        new_token = users.login_user(email, password)
+    except ForbiddenArgument:
+        payload = {
+            "status": JsonStatus.INVALID_ARGUMENT
+        }
+    except LoginFailed:
+        payload = {
+            "status": JsonStatus.WRONG_LOGIN_INFO
+        }
+    else:
+        payload = {
+            "status": JsonStatus.OK,
+            "token": new_token
+        }
+
+    return jsonify_response(payload)
 
 

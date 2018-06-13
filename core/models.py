@@ -2,7 +2,7 @@
 import time
 from passlib.hash import pbkdf2_sha512
 
-from .util import is_email, gen_id, gen_token, Singleton
+from .util import is_email, gen_id, gen_token, Singleton, decode
 from .exceptions import ForbiddenArgument, LoginFailed
 from .input_limits import UserLimits
 from .config import SALT, ROUNDS
@@ -90,6 +90,8 @@ class Users(metaclass=Singleton):
         if len(password) > UserLimits.PASSWORD_MAX_LENGTH:
             raise ForbiddenArgument("password too long")
 
+        # TODO check if username already exists
+
         payload = {
             "name": username,
             "fullname": fullname,
@@ -117,11 +119,16 @@ class Users(metaclass=Singleton):
         :return: Token to be used on sequential requests
         """
         # Get userid from email
-        if len(email) > UserLimits.EMAIL_MAX_LENGTH:
+        if len(email) > UserLimits.EMAIL_MAX_LENGTH or not is_email(email):
             raise ForbiddenArgument("invalid email")
+        if len(password) > UserLimits.PASSWORD_MAX_LENGTH:
+            raise ForbiddenArgument("password too long")
 
-        user_id = self.rc.hget("user_by_email", email)
+        # TODO test if none
+        user_id = decode(self.rc.hget("user_by_email", email))
 
+        if not user_id:
+            raise LoginFailed("wrong password/email")
         # Verify password
         if not self._verify_password(password, user_id):
             raise LoginFailed("wrong password/email")
