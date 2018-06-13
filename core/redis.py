@@ -1,5 +1,6 @@
 # coding=utf-8
 import redis
+import os
 import logging
 
 from .config import redis_config
@@ -42,7 +43,8 @@ class RedisData(redis.Redis, metaclass=Singleton):
             self.echo("Echo dis")
         except redis.ConnectionError:
             log.critical("RedisData connection could not be established, exiting!")
-            exit(4)
+            # os._exit instead of builtin exit(), because flask prevents us from shutting down
+            os._exit(4)
         else:
             log.info("RedisData connection successful")
 
@@ -60,7 +62,8 @@ class RedisCache(redis.Redis, metaclass=Singleton):
             self.echo("Echo dis")
         except redis.ConnectionError:
             log.critical("RedisCache connection could not be established, exiting!")
-            exit(4)
+            # see RedisData.__init__ for reasoning of os._exit
+            os._exit(4)
         else:
             log.info("RedisCache connection successful")
 
