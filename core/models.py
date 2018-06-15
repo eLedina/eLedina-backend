@@ -3,7 +3,7 @@ import time
 from passlib.hash import pbkdf2_sha512
 
 from .util import is_email, gen_id, gen_token, Singleton, decode
-from .exceptions import ForbiddenArgument, LoginFailed
+from .exceptions import ForbiddenArgument, LoginFailed, UserAlreadyExists
 from .input_limits import UserLimits
 from .config import SALT, ROUNDS
 
@@ -91,6 +91,8 @@ class Users(metaclass=Singleton):
             raise ForbiddenArgument("password too long")
 
         # TODO check if username already exists
+        if not decode(self.rc.hget("user:by_username", username)):
+            raise UserAlreadyExists
 
         payload = {
             "name": username,

@@ -36,7 +36,7 @@ def require_token(fn):
     @wraps(fn)
     def inner(*args, **kwargs):
         token = request.headers.get("Authorization")
-        user_id = Users.verify_token(token)
+        user_id = users.verify_token(token)
         if not token or not user_id:
             abort(403, "Invalid token")
 
