@@ -33,8 +33,9 @@ class CacheGenerator(metaclass=Singleton):
         self.rc.flushdb()
         log.warning("RedisCache wiped!")
 
-    def generate_cache(self):
-        self._wipe_cache()
+    def generate_cache(self, wipe_first=True):
+        if wipe_first:
+            self._wipe_cache()
 
         # "Premature optimization is the root of all evil" - Donald Knuth
 

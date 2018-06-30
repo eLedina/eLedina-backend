@@ -45,7 +45,11 @@ def require_token(fn):
     return inner
 
 
+#################
 # ERROR HANDLERS
+# These error handlers catch abort() calls and return json alongside a http status
+#################
+
 @api.errorhandler(400)
 def bad_request(error):
     payload = {
@@ -92,9 +96,22 @@ def rate_limit(error):
     return jsonify_response(payload, 429)
 
 
+#############
+# API ROUTES
+# Routes that are important for API calls
+#############
+
 @api.route("/version")
 @ip_rate_limit
 def version():
+    """
+    /version: version of the api
+
+    Fields: none
+    Statuses: none
+
+    :return: JSON(version)
+    """
     payload = {
         "version": __version__
     }
@@ -102,14 +119,17 @@ def version():
     return jsonify_response(payload)
 
 
-@api.route("/test")
+@api.route("/ping")
 @require_token
 @token_rate_limit
-def test(_user_id: int):
+def ping(_user_id: int):
     """
-    /test: an endpoint to test connection
-    :param _user_id:
-    :return:
+    /ping: connection test
+
+    Fields: none
+    Statuses: none
+
+    :return: JSON(echo: str)
     """
     payload = {
         "echo": randint(1, 150)
@@ -122,14 +142,23 @@ def test(_user_id: int):
 @ip_rate_limit
 def register():
     """
-    Registers a user
+    /register: Register a user and generate an access token
 
-    Fields: username, name, surname, email, password
-    :return:
+    Fields:
+        username: str
+        name: str
+        surname: str
+        email: str
+        password: str
+
+    Statuses:
+        USER_ALREADY_EXISTS: username is taken
+        OK: everything ok, user registered
+
+    :return: JSON(status, [token, ])
     """
     body = loads(request.data)
 
-    # TODO
     try:
         username = body["username"]
         name = body["name"]
@@ -137,7 +166,7 @@ def register():
         email = body["email"]
         password = body["password"]
 
-        fullname = f"{name}{surname}"
+        fullname = f"{name}|{surname}"
     except KeyError:
         abort(400, dict(description="Invalid fields!"))
         return
@@ -162,10 +191,19 @@ def register():
 @ip_rate_limit
 def login():
     """
-    Login the user
+    /login: Login the user and generate an access token
 
-    Fields: email, password
-    :return:
+    # TODO allow username login
+    Fields:
+        email: str
+        password: str
+
+    Statuses:
+        INVALID_ARGUMENT: one/more of the passed fields is incorrect
+        WRONG_LOGIN_INFO: any of the login arguments are incorrect
+        OK: everything went ok, new token generated
+
+    :return: JSON(status, [token, ])
     """
     body = loads(request.data)
 

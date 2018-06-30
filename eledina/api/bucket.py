@@ -36,7 +36,7 @@ token_buckets = {}
 
 def _send_429(bucket):
     """
-    Aborts the request with 420 Too Many Requests
+    Uses Flasks abort() to return a HTTP "429 Too Many Requests"
     """
     # Calculates bucket expiration time
     ttl = (bucket.last_cooldown + bucket._cooldown) - time.time()
@@ -75,13 +75,13 @@ def token_rate_limit(fn):
     @wraps(fn)
     def inner(token, *args, **kwargs):
         # Add a bucket if not present
-        if not ip_buckets.get(token):
+        if not token_buckets.get(token):
             b = Bucket()
             b.action()
-            ip_buckets[token] = b
+            token_buckets[token] = b
         # Otherwise, verify that the user has some requests left in this time period
         else:
-            bucket = ip_buckets[token]
+            bucket = token_buckets[token]
 
             if not bucket.action():
                 _send_429(bucket)
