@@ -40,6 +40,8 @@ class Users(metaclass=Singleton):
                 <userid>: <token: str>
 
     """
+    USER_ATTR_WHITELIST = ("username", "fullname", "about", "email", "password", "role", "reg_on")
+
     def __init__(self):
         self.rd = RedisData()
         self.rc = RedisCache()
@@ -52,6 +54,12 @@ class Users(metaclass=Singleton):
         # return pbkdf2_sha512.encrypt(password, rounds=ROUNDS, salt=SALT)
         return pbkdf2_sha512.using(rounds=ROUNDS, salt=SALT).hash(password)
 
+    @staticmethod
+    def _is_valid_userid(user_id: int):
+        # TODO verify that it works
+        # !! HARDCODED ID LENGTH !!
+        return isinstance(user_id, int) and len(str(user_id)) == 25
+
     def _verify_password(self, password: str, user_id: int) -> bool:
         """
         Verifies that the password is correct
@@ -60,6 +68,9 @@ class Users(metaclass=Singleton):
         return pbkdf2_sha512.verify(password, hashed)
 
     def _change_token(self, user_id: int, new_token: str):
+        if not self._is_valid_userid(user_id):
+            raise ForbiddenArgument("invalid user_id")
+
         # TODO token expiration
         current_token = self.rd.hget("auth:by_user", user_id)
 
@@ -72,11 +83,11 @@ class Users(metaclass=Singleton):
 
         pipe.execute()
 
-    def _user_exists(self, username: str):
+    def _user_exists(self, username: str) -> bool:
         return self.rc.hexists("user:by_username", username)
 
     # USER CREATION
-    def register_user(self, username: str, fullname: str, email: str, password: str):
+    def register_user(self, username: str, fullname: str, email: str, password: str) -> str:
         """
         Registers a new user
         """
@@ -126,7 +137,7 @@ class Users(metaclass=Singleton):
         if len(password) > UserLimits.PASSWORD_MAX_LENGTH:
             raise ForbiddenArgument("password too long")
 
-        # TODO test if none
+        # TODO verify it works
         user_id = decode(self.rc.hget("user_by_email", email))
 
         if not user_id:
@@ -140,25 +151,47 @@ class Users(metaclass=Singleton):
 
         return new_token
 
-    def verify_token(self, token: str):
+    def verify_token(self, token: str) -> str:
         """
         Returns a userid from the provided token - used on requests with restricted access to verify user
         :return: user id
         """
         return self.rd.hget("auth:by_token", token)
 
-    # THESE FUNCTIONS NEED ID'S
-    def get_username(self, user_id):
-        raise NotImplementedError
+    def _get_user_attr(self, user_id: int, attr: str) -> str:
+        """
+        Returns a value from user:* hash
 
-    def get_full_name(self, user_id):
-        raise NotImplementedError
+        :param user_id: ID of the user
+        :param attr: attribute to access
+        :type attr: str
 
-    def get_description(self, user_id):
-        raise NotImplementedError
+        :return: requested attribute value
+        """
+        if not self._is_valid_userid(user_id):
+            raise ForbiddenArgument("invalid user_id")
 
-    def get_email(self, user_id):
-        raise NotImplementedError
+        # Verify attr
+        if attr not in Users.USER_ATTR_WHITELIST:
+            raise ForbiddenArgument("invalid attribute")
 
-    def _get_hashed_password(self, user_id):
-        raise NotImplementedError
+        return decode(self.rd.hget(f"user:{user_id}", attr))
+
+    ###################
+    # GETTER FUNCTIONS
+    # THESE NEED ID'S
+    ###################
+    def get_username(self, user_id: int) -> str:
+        return self._get_user_attr(user_id, "username")
+
+    def get_full_name(self, user_id: int) -> str:
+        return self._get_user_attr(user_id, "fullname")
+
+    def get_about(self, user_id: int) -> str:
+        return self._get_user_attr(user_id, "about")
+
+    def get_email(self, user_id: int) -> str:
+        return self._get_user_attr(user_id, "email")
+
+    def _get_hashed_password(self, user_id: int) -> str:
+        return self._get_user_attr(user_id, "password")
