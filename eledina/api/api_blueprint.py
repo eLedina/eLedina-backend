@@ -9,7 +9,7 @@ except ImportError:
 
 from ..flask_util import jsonify_response
 from .bucket import ip_rate_limit, token_rate_limit
-from core.exceptions import UserAlreadyExists, ForbiddenArgument, LoginFailed
+from core.exceptions import UsernameAlreadyExists, ForbiddenArgument, LoginFailed, EmailAlreadyRegistered
 from core.models import Users
 from core.cachemanager import CacheGenerator
 from core.types_ import JsonStatus
@@ -174,17 +174,27 @@ def register():
     # Additionally verifies data
     try:
         token = users.register_user(username, fullname, email, password)
-    except UserAlreadyExists:
+    except UsernameAlreadyExists:
         payload = {
             "status": JsonStatus.USER_ALREADY_EXISTS,
         }
+
+        return jsonify_response(payload, 403)
+
+    except EmailAlreadyRegistered:
+        payload = {
+            "status": JsonStatus.EMAIL_ALREADY_REGISTERED
+        }
+
+        return jsonify_response(payload, 403)
+
     else:
         payload = {
             "status": JsonStatus.OK,
             "token": token,
         }
 
-    return jsonify_response(payload)
+        return jsonify_response(payload)
 
 
 @api.route("/login", methods=["POST"])

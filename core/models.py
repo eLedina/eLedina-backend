@@ -3,7 +3,7 @@ import time
 from passlib.hash import pbkdf2_sha512
 
 from .util import is_email, gen_id, gen_token, Singleton, decode
-from .exceptions import ForbiddenArgument, LoginFailed, UserAlreadyExists
+from .exceptions import ForbiddenArgument, LoginFailed, UsernameAlreadyExists, EmailAlreadyRegistered
 from .input_limits import UserLimits
 from .config import SALT, ROUNDS
 
@@ -58,7 +58,8 @@ class Users(metaclass=Singleton):
     def _is_valid_userid(user_id: int):
         # TODO verify that it works
         # !! HARDCODED ID LENGTH !!
-        return isinstance(user_id, int) and len(str(user_id)) == 25
+        # see gen_id() for explanation
+        return isinstance(user_id, int) and len(str(user_id)) == 20
 
     def _verify_password(self, password: str, user_id: int) -> bool:
         """
@@ -102,8 +103,12 @@ class Users(metaclass=Singleton):
             raise ForbiddenArgument("password too long")
 
         # TODO check if username already exists
-        if not decode(self.rc.hget("user:by_username", username)):
-            raise UserAlreadyExists
+        # TODO check if email already exists
+        if self.rc.hexists("user:by_username", username):
+            raise UsernameAlreadyExists
+
+        if self.rc.hexists("user:by_email", email):
+            raise EmailAlreadyRegistered
 
         payload = {
             "name": username,

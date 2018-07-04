@@ -17,17 +17,21 @@ class Singleton(type):
         return cls._instances[cls]
 
 
-def gen_id(byte_size=25):
+def gen_id(id_size=12) -> int:
     """
     Generate a 'unique' id:
-        secondsSinceYear+randomBits
+        random_bits+seconds_since_year_zero_padded
+
+    The actual ID size is id_size + 8 (by default this makes the ID 20 digits long)
     """
     today = datetime.datetime.now()
     year = datetime.datetime(year=today.year, month=1, day=1)
 
-    td = int((today - year).total_seconds())
-    gen = str(uuid.uuid4().int)[:byte_size]
-    return int(str(td) + gen)
+    # Pad to be fixed 8 chars (the biggest number is 31556926, which has 8 digits)
+    td = str(int((today - year).total_seconds())).zfill(8)
+    gen = str(uuid.uuid4().int)[:id_size]
+
+    return int(gen + td)
 
 
 def gen_token():

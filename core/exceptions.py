@@ -22,8 +22,14 @@ class LoginFailed(BackendException):
     pass
 
 
-class UserAlreadyExists(BackendException):
+class UsernameAlreadyExists(BackendException):
     """
     Raised while registering when a username already exists
     """
     pass
+
+
+class EmailAlreadyRegistered(BackendException):
+    """
+    Raised while registering when an email is already reigstered
+    """

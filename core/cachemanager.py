@@ -47,7 +47,7 @@ class CacheGenerator(metaclass=Singleton):
         for key in self.rd.scan_iter(match="user:*"):
             key = bytes(key).decode(encoding="utf-8")
             user_id = key.split(":", maxsplit=1)[1]
-            log.info(f"Processing {user_id}")
+            log.debug(f"Processing {user_id}")
             count += 1
 
             user = decode(self.rd.hgetall(key))
