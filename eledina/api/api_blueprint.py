@@ -14,7 +14,6 @@ from core.models import Users
 from core.models import Blogs
 from core.cachemanager import CacheGenerator
 from core.types_ import JsonStatus
-import sys
 
 
 __version__ = "0.1.0"
@@ -247,7 +246,9 @@ def login():
 
 
 @api.route("/blog/new", methods=["POST"])
-def blog_new():
+@require_token
+@token_rate_limit
+def blog_new(_user_id):
     body = loads(request.data)
 
     title = body.get("title")
