@@ -10,8 +10,7 @@ except ImportError:
 from ..flask_util import jsonify_response
 from .bucket import ip_rate_limit, token_rate_limit
 from core.exceptions import UsernameAlreadyExists, ForbiddenArgument, LoginFailed, EmailAlreadyRegistered
-from core.models import Users
-from core.models import Blogs
+from core.models import Users, Blogs
 from core.cachemanager import CacheGenerator
 from core.types_ import JsonStatus
 import sys
@@ -26,6 +25,7 @@ api = Blueprint("api", __name__,
 
 
 users = Users()
+blogs = Blogs()
 CacheGenerator().generate_cache()
 
 
@@ -247,9 +247,17 @@ def login():
 
 
 @api.route("/blog/new", methods=["POST"])
+@ip_rate_limit
 def blog_new():
+    print(request.data)
     body = loads(request.data)
 
     title = body.get("title")
     content = body.get("content")
     date = body.get("date")
+
+    blogs.upload_blog(title, content, date)
+    payload = {
+        "status": JsonStatus.OK,
+    }
+    return jsonify_response(payload)

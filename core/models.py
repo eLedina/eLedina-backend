@@ -202,7 +202,7 @@ class Users(metaclass=Singleton):
         return self._get_user_attr(user_id, "password")
 
 
-class Blogs(metaclass=Singleton):
+class Blogs():
 
     def __init__(self):
         self.rd = RedisData()
