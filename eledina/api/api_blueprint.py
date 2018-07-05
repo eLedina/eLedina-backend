@@ -11,8 +11,10 @@ from ..flask_util import jsonify_response
 from .bucket import ip_rate_limit, token_rate_limit
 from core.exceptions import UsernameAlreadyExists, ForbiddenArgument, LoginFailed, EmailAlreadyRegistered
 from core.models import Users
+from core.models import Blogs
 from core.cachemanager import CacheGenerator
 from core.types_ import JsonStatus
+import sys
 
 
 __version__ = "0.1.0"
@@ -244,3 +246,10 @@ def login():
     return jsonify_response(payload)
 
 
+@api.route("/blog_writingpage", methods=["POST"])
+def blog_writingpage():
+
+    payload = request.get_json(silent=True)
+    title = payload.get("title")
+    content = payload.get("content")
+    date = payload.get("date")

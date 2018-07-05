@@ -200,3 +200,20 @@ class Users(metaclass=Singleton):
 
     def _get_hashed_password(self, user_id: int) -> str:
         return self._get_user_attr(user_id, "password")
+
+
+class Blogs():
+
+    def __init__(self):
+        self.rd = RedisData()
+        self.rc = RedisCache()
+
+    def upload_blog(self, title: str, content: str, date: str) -> str:
+        payload = {
+            "title": title,
+            "content": content,
+            "date": date
+        }
+
+        blogid = gen_id()
+        self.rd.hmset(f"entry:{blogid}", payload)
