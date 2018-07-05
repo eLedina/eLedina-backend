@@ -13,7 +13,6 @@ from core.exceptions import UsernameAlreadyExists, ForbiddenArgument, LoginFaile
 from core.models import Users, Blogs
 from core.cachemanager import CacheGenerator
 from core.types_ import JsonStatus
-import sys
 
 
 __version__ = "0.1.0"
