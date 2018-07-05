@@ -246,10 +246,10 @@ def login():
     return jsonify_response(payload)
 
 
-@api.route("/blog_writingpage", methods=["POST"])
-def blog_writingpage():
+@api.route("/blog/new", methods=["POST"])
+def blog_new():
+    body = loads(request.data)
 
-    payload = request.get_json(silent=True)
-    title = payload.get("title")
-    content = payload.get("content")
-    date = payload.get("date")
+    title = body.get("title")
+    content = body.get("content")
+    date = body.get("date")
