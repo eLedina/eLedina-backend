@@ -202,7 +202,7 @@ class Users(metaclass=Singleton):
         return self._get_user_attr(user_id, "password")
 
 
-class Blogs():
+class Blogs(metaclass=Singleton):
 
     def __init__(self):
         self.rd = RedisData()
@@ -216,4 +216,4 @@ class Blogs():
         }
 
         blogid = gen_id()
-        self.rd.hmset(f"entry:{blogid}", payload)
+        self.rd.hmset(f"blog:{blogid}", payload)
