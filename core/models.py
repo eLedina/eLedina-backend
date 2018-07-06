@@ -104,8 +104,6 @@ class Users(metaclass=Singleton):
         if len(password) > UserLimits.PASSWORD_MAX_LENGTH:
             raise ForbiddenArgument("password too long")
 
-        # TODO check if username already exists
-        # TODO check if email already exists
         if self.rc.hexists("user:by_username", username):
             raise UsernameAlreadyExists
 
@@ -130,7 +128,6 @@ class Users(metaclass=Singleton):
         self._change_token(user_id, new_token)
 
         # UPDATE CACHE for this user (so others can't register with the same username or email)
-        # TODO verify this works
         self.cache.cache_single_user(user_id)
 
         return new_token
