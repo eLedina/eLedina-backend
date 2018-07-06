@@ -26,7 +26,6 @@ api = Blueprint("api", __name__,
 users = Users()
 blogs = Blogs()
 CacheGenerator().generate_cache()
-CacheGenerator().blog_cache()
 
 
 # AUTHENTICATION

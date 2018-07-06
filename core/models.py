@@ -7,7 +7,6 @@ from .exceptions import ForbiddenArgument, LoginFailed, UsernameAlreadyExists, E
 from .input_limits import UserLimits
 from .config import SALT, ROUNDS
 
-
 from .redis import RedisData, RedisCache
 
 
@@ -202,7 +201,7 @@ class Users(metaclass=Singleton):
         return self._get_user_attr(user_id, "password")
 
 
-class Blogs():
+class Blogs(metaclass=Singleton):
 
     def __init__(self):
         self.rd = RedisData()
@@ -218,12 +217,21 @@ class Blogs():
         blogid = gen_id()
         self.rd.hmset(f"blog:{blogid}", payload)
 
-    def get_blog(payload):
+    def get_blog(self):
 
-        payload = {
-            "85635639": ["title1", "content", "1530864885"],
-            "77435873": ["title2", "content", "1530865605"],
-            "65486879": ["title3", "content", "1530952005"]
-        }
+        payload = {}
+
+        for id in self.rd.scan_iter(match="blog:*"):
+            blog = decode(self.rd.hgetall(id))
+            title = blog.get("title")
+            content = blog.get("content")
+            date = blog.get("date")
+            id = id.decode('utf-8')
+
+            payload[id] = {
+                "title": title,
+                "content": content,
+                "date": str(date)
+            }
 
         return payload
