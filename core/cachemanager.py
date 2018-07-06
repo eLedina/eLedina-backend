@@ -61,3 +61,22 @@ class CacheGenerator(metaclass=Singleton):
         log.info(f"Generated user cache with {count} entries.")
 
         # TODO
+
+    def blog_cache(self, wipe_first=True):
+        if wipe_first:
+            self._wipe_cache()
+
+        log.info("Generating blog cache...")
+
+        for key in self.rd.scan_iter(match="blog:*"):
+            key = bytes(key).decode(encoding="utf-8")
+            blogid = key.split(":", maxsplit=1)[1]
+            log.debug(f"Processing {blogid}")
+            count += 1
+
+            blog = decode(self.rd.hgetall(key))
+
+            title = blog.get("title")
+            date = blog.get("date")
+
+            self.rc.hset("blog:by_date", date, blogid)

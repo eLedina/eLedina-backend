@@ -26,6 +26,7 @@ api = Blueprint("api", __name__,
 users = Users()
 blogs = Blogs()
 CacheGenerator().generate_cache()
+CacheGenerator().blog_cache()
 
 
 # AUTHENTICATION
@@ -260,3 +261,14 @@ def blog_new():
         "status": JsonStatus.OK,
     }
     return jsonify_response(payload)
+
+    CacheGenerator().blog_cache()
+
+
+@api.route("/blog/list", methods=["GET"])
+@ip_rate_limit
+def blog_get():
+
+    pack = blogs.get_blog()
+
+    return jsonify_response(pack)

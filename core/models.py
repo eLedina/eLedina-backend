@@ -217,3 +217,13 @@ class Blogs():
 
         blogid = gen_id()
         self.rd.hmset(f"blog:{blogid}", payload)
+
+    def get_blog(payload):
+
+        payload = {
+            "85635639": ["title1", "content", "1530864885"],
+            "77435873": ["title2", "content", "1530865605"],
+            "65486879": ["title3", "content", "1530952005"]
+        }
+
+        return payload
