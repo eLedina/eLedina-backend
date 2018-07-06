@@ -6,6 +6,7 @@ from .util import is_email, gen_id, gen_token, Singleton, decode
 from .exceptions import ForbiddenArgument, LoginFailed, UsernameAlreadyExists, EmailAlreadyRegistered
 from .input_limits import UserLimits
 from .config import SALT, ROUNDS
+from .cachemanager import CacheGenerator
 
 
 from .redis import RedisData, RedisCache
@@ -45,6 +46,7 @@ class Users(metaclass=Singleton):
     def __init__(self):
         self.rd = RedisData()
         self.rc = RedisCache()
+        self.cache = CacheGenerator()
 
     @staticmethod
     def _hash_password(password: str) -> str:
@@ -126,6 +128,10 @@ class Users(metaclass=Singleton):
         # Generate and return token
         new_token = gen_token()
         self._change_token(user_id, new_token)
+
+        # UPDATE CACHE for this user (so others can't register with the same username or email)
+        # TODO verify this works
+        self.cache.cache_single_user(user_id)
 
         return new_token
 

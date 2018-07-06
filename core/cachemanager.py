@@ -33,12 +33,26 @@ class CacheGenerator(metaclass=Singleton):
         self.rc.flushdb()
         log.warning("RedisCache wiped!")
 
-    def generate_cache(self, wipe_first=True):
-        if wipe_first:
-            self._wipe_cache()
+    ##############################
+    # CACHE GENERATORS for individual users
+    # This is to be used for generating small chunks of cache when the server is already running.
+    # Example: when a user registers
+    #
+    # All of these functions should have a prefix: cache_single_<type>
+    ##############################
+    def cache_single_user(self, user_id: int):
+        user = decode(self.rd.hgetall(f"user:{user_id}"))
 
-        # "Premature optimization is the root of all evil" - Donald Knuth
+        username = user["name"]
+        email = user["email"]
 
+        self.rc.hset("user:by_username", username, user_id)
+        self.rc.hset("user:by_email", email, user_id)
+
+    ##############################
+    # INDIVIDUAL CACHE GENERATORS
+    ##############################
+    def _gen_user_cache(self):
         # USER cache
         # user:by_username and user:by_email
         count = 0
@@ -46,18 +60,21 @@ class CacheGenerator(metaclass=Singleton):
 
         for key in self.rd.scan_iter(match="user:*"):
             key = bytes(key).decode(encoding="utf-8")
-            user_id = key.split(":", maxsplit=1)[1]
+            user_id = int(key.split(":", maxsplit=1)[1])
+
             log.debug(f"Processing {user_id}")
             count += 1
-
-            user = decode(self.rd.hgetall(key))
-
-            username = user.get("name")
-            email = user.get("email")
-
-            self.rc.hset("user:by_username", username, user_id)
-            self.rc.hset("user:by_email", email, user_id)
+            self.cache_single_user(user_id)
 
         log.info(f"Generated user cache with {count} entries.")
 
-        # TODO
+    def generate_cache(self, wipe_first=True):
+        if wipe_first:
+            self._wipe_cache()
+
+        # "Premature optimization is the root of all evil" - Donald Knuth
+
+        # USER CACHE
+        self._gen_user_cache()
+
+        # TODO other types of cache
