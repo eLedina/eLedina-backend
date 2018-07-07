@@ -255,19 +255,19 @@ def blog_new():
     content = body.get("content")
     date = body.get("date")
 
+    # Class and function imported from models.py
     blogs.upload_blog(title, content, date)
-    payload = {
+    blogpack = {
         "status": JsonStatus.OK,
     }
-    return jsonify_response(payload)
-
-    CacheGenerator().blog_cache()
+    return jsonify_response(blogpack)
+    # CacheGenerator().blog_cache()
 
 
 @api.route("/blog/list", methods=["GET"])
 @ip_rate_limit
 def blog_get():
+    # Class and function imported from models.py
+    bpack = blogs.get_blog()
 
-    pack = blogs.get_blog()
-
-    return jsonify_response(pack)
+    return jsonify_response(bpack)

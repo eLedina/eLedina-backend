@@ -208,19 +208,22 @@ class Blogs(metaclass=Singleton):
         self.rc = RedisCache()
 
     def upload_blog(self, title: str, content: str, date: str) -> str:
-        payload = {
+        # Package form as gotten from api_blueprint.py
+        blogpack = {
             "title": title,
             "content": content,
             "date": date
         }
 
+        # Generates blog ID
         blogid = gen_id()
-        self.rd.hmset(f"blog:{blogid}", payload)
+        # Stores data inside Redis Data
+        self.rd.hmset(f"blog:{blogid}", blogpack)
 
     def get_blog(self):
+        bpack = {}
 
-        payload = {}
-
+        # Searches for every key with blog:... and gets it's data
         for id in self.rd.scan_iter(match="blog:*"):
             blog = decode(self.rd.hgetall(id))
             title = blog.get("title")
@@ -228,10 +231,11 @@ class Blogs(metaclass=Singleton):
             date = blog.get("date")
             id = id.decode('utf-8')
 
-            payload[id] = {
+            bpack[id] = {
                 "title": title,
                 "content": content,
+                # Since intiger won't work, it's a string
                 "date": str(date)
             }
 
-        return payload
+        return bpack
