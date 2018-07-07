@@ -133,24 +133,29 @@ class Users(metaclass=Singleton):
         return new_token
 
     # METHODS THAT OPERATE WITH TOKENS
-    def login_user(self, email: str, password: str) -> str:
+    def login_user(self, primary: str, password: str) -> str:
         """
         Logs in the user with the provided email and password.
 
+        :param: primary: Primary identification (email or username)
         :return: Token to be used on sequential requests
         """
         # Get userid from email
-        if len(email) > UserLimits.EMAIL_MAX_LENGTH or not is_email(email):
-            raise ForbiddenArgument("invalid email")
+        if len(primary) < UserLimits.EMAIL_MIN_LENGTH or len(primary) > UserLimits.EMAIL_MAX_LENGTH:
+            raise ForbiddenArgument("invalid primary")
         if len(password) > UserLimits.PASSWORD_MAX_LENGTH:
             raise ForbiddenArgument("password too long")
 
         # TODO verify it works
-        user_id = decode(self.rc.hget("user_by_email", email))
+        user_id = decode(self.rc.hget("user:by_email", primary))
+        # User didn't pass email, but username
+        if not user_id:
+            user_id = decode(self.rc.hget("user:by_username", primary))
 
+        # If user_id is still None that means incorrect credentials were sent
         if not user_id:
             raise LoginFailed("wrong password/email")
-        # Verify password
+
         if not self._verify_password(password, user_id):
             raise LoginFailed("wrong password/email")
 

@@ -217,30 +217,32 @@ def login():
     """
     body = loads(request.data)
 
-    # TODO
     try:
-        email = body["email"]
+        primary = body["primary"]
         password = body["password"]
     except KeyError:
         abort(400, dict(description="Missing fields!"))
         return
 
     try:
-        new_token = users.login_user(email, password)
+        new_token = users.login_user(primary, password)
     except ForbiddenArgument:
         payload = {
             "status": JsonStatus.INVALID_ARGUMENT
         }
+        return jsonify_response(payload, 403)
+
     except LoginFailed:
         payload = {
             "status": JsonStatus.WRONG_LOGIN_INFO
         }
+        return jsonify_response(payload, 403)
+
     else:
         payload = {
             "status": JsonStatus.OK,
             "token": new_token
         }
-
-    return jsonify_response(payload)
+        return jsonify_response(payload)
 
 
