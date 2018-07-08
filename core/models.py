@@ -8,7 +8,6 @@ from .input_limits import UserLimits
 from .config import SALT, ROUNDS
 from .cachemanager import CacheGenerator
 
-
 from .redis import RedisData, RedisCache
 
 
@@ -208,3 +207,43 @@ class Users(metaclass=Singleton):
 
     def _get_hashed_password(self, user_id: int) -> str:
         return self._get_user_attr(user_id, "password")
+
+
+class Blogs(metaclass=Singleton):
+
+    def __init__(self):
+        self.rd = RedisData()
+        self.rc = RedisCache()
+
+    def upload_blog(self, title: str, content: str, date: str) -> str:
+        # Package form as gotten from api_blueprint.py
+        blogpack = {
+            "title": title,
+            "content": content,
+            "date": date
+        }
+
+        # Generates blog ID
+        blogid = gen_id()
+        # Stores data inside Redis Data
+        self.rd.hmset(f"blog:{blogid}", blogpack)
+
+    def get_blog(self):
+        bpack = {}
+
+        # Searches for every key with blog:... and gets it's data
+        for id in self.rd.scan_iter(match="blog:*"):
+            blog = decode(self.rd.hgetall(id))
+            title = blog.get("title")
+            content = blog.get("content")
+            date = blog.get("date")
+            id = id.decode('utf-8')
+
+            bpack[id] = {
+                "title": title,
+                "content": content,
+                # Since intiger won't work, it's a string
+                "date": str(date)
+            }
+
+        return bpack
