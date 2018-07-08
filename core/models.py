@@ -220,7 +220,7 @@ class Blogs(metaclass=Singleton):
         # Stores data inside Redis Data
         self.rd.hmset(f"blog:{blogid}", blogpack)
 
-    def get_blog(self):
+    def list_blogs(self):
         bpack = {}
 
         # Searches for every key with blog:... and gets it's data
@@ -229,7 +229,7 @@ class Blogs(metaclass=Singleton):
             title = blog.get("title")
             content = blog.get("content")
             date = blog.get("date")
-            id = id.decode('utf-8')
+            id = decode(id)
 
             bpack[id] = {
                 "title": title,

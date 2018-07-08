@@ -248,12 +248,15 @@ def login():
 @api.route("/blog/new", methods=["POST"])
 @ip_rate_limit
 def blog_new():
-    print(request.data)
     body = loads(request.data)
 
-    title = body.get("title")
-    content = body.get("content")
-    date = body.get("date")
+    try:
+        title = body.get("title")
+        content = body.get("content")
+        date = body.get("date")
+    except KeyError:
+        abort(400, dict(description="Missing shit!"))
+        return
 
     # Class and function imported from models.py
     blogs.upload_blog(title, content, date)
@@ -266,8 +269,23 @@ def blog_new():
 
 @api.route("/blog/list", methods=["GET"])
 @ip_rate_limit
-def blog_get():
+def blog_list():
     # Class and function imported from models.py
-    bpack = blogs.get_blog()
+    bpack = blogs.list_blogs()
 
     return jsonify_response(bpack)
+
+
+@api.route("/blog/get", methods=["POST"])
+def blog_get():
+    id = loads(request.data)
+    bpack = blogs.list_blogs()
+    finish = ()
+    print(id)
+    print(bpack)
+
+    for blogID in bpack:
+        if blogID.replace("blog:", "") == id:
+            return jsonify_response(bpack["blog:" + id])
+        else:
+            finish = jsonify_response("Nope")
