@@ -279,13 +279,15 @@ def blog_list():
 @api.route("/blog/get", methods=["POST"])
 def blog_get():
     id = loads(request.data)
-    bpack = blogs.list_blogs()
-    finish = ()
     print(id)
+
+    blogs.get_specific_blog(id)
+
+    bpack = blogs.get_specific_blog(id)
     print(bpack)
 
-    for blogID in bpack:
-        if blogID.replace("blog:", "") == id:
-            return jsonify_response(bpack["blog:" + id])
-        else:
-            finish = jsonify_response("Nope")
+    for x in bpack:
+        if bpack[x] is None:
+            abort(404, dict(description="Missing shit!"))
+
+    return jsonify_response(bpack)

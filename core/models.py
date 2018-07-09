@@ -220,6 +220,20 @@ class Blogs(metaclass=Singleton):
         # Stores data inside Redis Data
         self.rd.hmset(f"blog:{blogid}", blogpack)
 
+    def get_specific_blog(self, id):
+        blog = decode(self.rd.hgetall("blog:" + id))
+        title = blog.get("title")
+        content = blog.get("content")
+        date = blog.get("date")
+
+        bpack = {
+            "title": title,
+            "content": content,
+            "date": str(date)
+        }
+
+        return bpack
+
     def list_blogs(self):
         bpack = {}
 
@@ -230,6 +244,7 @@ class Blogs(metaclass=Singleton):
             content = blog.get("content")
             date = blog.get("date")
             id = decode(id)
+            id = id.replace("blog:", "")
 
             bpack[id] = {
                 "title": title,
