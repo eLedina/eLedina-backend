@@ -193,6 +193,12 @@ class Users(metaclass=Singleton):
     # GETTER FUNCTIONS
     # THESE NEED ID'S
     ###################
+    def get_user_info(self, user_id: int) -> dict:
+        data = decode(self.rd.hgetall(f"user:{user_id}"))
+        # passing password is not good even if hashed, so we remove it
+        del data["password"]
+        return data
+
     def get_username(self, user_id: int) -> str:
         return self._get_user_attr(user_id, "username")
 

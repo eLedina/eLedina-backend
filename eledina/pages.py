@@ -1,7 +1,9 @@
 # coding=utf-8
 import logging
 import os
-from flask import Blueprint, render_template, abort
+from flask import Blueprint, render_template, abort, g, request
+
+from core.models import Users
 
 
 pages = Blueprint("pages", __name__,
@@ -14,6 +16,27 @@ log.setLevel(logging.INFO)
 valid_extensions = (
     ".ico",
 )
+
+users = Users()
+
+
+# Set user before request
+@pages.before_request
+def before_request():
+    # check cookies
+    access_token = request.cookies.get("accessToken")
+
+    if access_token is not None:
+        # get user id
+        user_id = users.verify_token(access_token)
+        if not user_id:
+            return abort(400)
+
+        user_info = users.get_user_info(int(user_id))
+        # set 'g' to include logged in user info
+        g.user = user_info
+    else:
+        g.user = {}
 
 
 # This renders all pages normally
@@ -30,3 +53,4 @@ def page_render(template):
         return abort(404)
 
     return render_template(t)
+
