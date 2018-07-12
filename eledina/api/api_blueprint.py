@@ -204,9 +204,8 @@ def login():
     """
     /login: Login the user and generate an access token
 
-    # TODO allow username login
     Fields:
-        email: str
+        primary: str - can be either email or username
         password: str
 
     Statuses:

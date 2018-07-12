@@ -57,7 +57,6 @@ class Users(metaclass=Singleton):
 
     @staticmethod
     def _is_valid_userid(user_id: int):
-        # TODO verify that it works
         # !! HARDCODED ID LENGTH !!
         # see gen_id() for explanation
         return isinstance(user_id, int) and len(str(user_id)) == 20
@@ -145,7 +144,6 @@ class Users(metaclass=Singleton):
         if len(password) > UserLimits.PASSWORD_MAX_LENGTH:
             raise ForbiddenArgument("password too long")
 
-        # TODO verify it works
         user_id = decode(self.rc.hget("user:by_email", primary))
         # User didn't pass email, but username
         if not user_id:
