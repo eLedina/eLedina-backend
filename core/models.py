@@ -236,6 +236,7 @@ class Blogs(metaclass=Singleton):
 
     def list_blogs(self):
         bpack = {}
+        sortedpack = {}
 
         # Searches for every key with blog:... and gets it's data
         for id in self.rd.scan_iter(match="blog:*"):
@@ -252,5 +253,5 @@ class Blogs(metaclass=Singleton):
                 # Since intiger won't work, it's a string
                 "date": str(date)
             }
-
+            
         return bpack

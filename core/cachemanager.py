@@ -60,4 +60,21 @@ class CacheGenerator(metaclass=Singleton):
 
         log.info(f"Generated user cache with {count} entries.")
 
+        blog_dict = {}
+        for blog_id in self.rd.scan_iter(match="blog:*"):
+            blog_date = blog_id.get("date")
+            blog_dict = {
+                "blog_id": blog_id,
+                "blog_date": blog_date
+            }
+
+        for blog_key in sorted(blog_dict.items(), key=lambda k_v: k_v[1]["date"]):
+            blog_key = bytes(blog_key).decode(encoding="utf-8")
+            blog_id = blog_key.split(":")[1]
+            print(f"This is blog {blog_id}")
+
+            blog = decode(self.rd.hgetall(blog_key))
+            blog_date = blog.get("date")
+            self.rc.hset("blog:by_date", blog_date, blog_id)
+
         # TODO
