@@ -1,5 +1,6 @@
 # coding=utf-8
 import logging
+import time
 import os
 from flask import Blueprint, render_template, abort, g, request
 
@@ -23,6 +24,18 @@ users = Users()
 # Set user before request
 @pages.before_request
 def before_request():
+    ######################################
+    # 1. ADD ABILITY TO CHECK RENDER TIME
+    # via g.render_time()
+    # Adapted from https://gist.github.com/lost-theory/4521102
+    ######################################
+    g.request_start_time = time.time()
+    g.request_time = lambda: str(round(time.time() - g.request_start_time, 4))
+
+    ###################################
+    # 2. PARSE COOKIE TO GET USER ID
+    ###################################
+
     # check cookies
     access_token = request.cookies.get("accessToken")
 
