@@ -231,7 +231,8 @@ class Users(metaclass=Singleton):
         if field == "email" and self.rc.hexists("user:by_email", value):
             raise EmailAlreadyRegistered("email already registered")
         if field == "password":
-            raise ForbiddenArgument("can't update password via _set_user_field")
+            # Hash password
+            value = self._hash_password(value)
         if field == "reg_on":
             raise ForbiddenArgument("can't update reg_on via _set_user_field")
 
@@ -244,6 +245,8 @@ class Users(metaclass=Singleton):
         elif field == "email":
             prev = data["email"]
             self.cache.cache_user_field_update(user_id, FieldUpdateType.EMAIL_UPDATE, prev, value)
+
+        return response
 
     def update_user(self, user_id: int, fields: dict):
         if not self._is_valid_userid(user_id):
