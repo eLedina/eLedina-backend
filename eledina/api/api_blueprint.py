@@ -264,6 +264,7 @@ def user_manage(user_id: int):
     Statuses:
         WRONG_LOGIN_INFO: passwordCurrent was invalid
         INVALID_ARGUMENT: an invalid argument was passed or the id was invalid
+        USER_ALREADY_EXISTS: username or email is already registered
         OK: everything ok, user fields updated
 
     :return: JSON(status)
@@ -290,7 +291,14 @@ def user_manage(user_id: int):
         if email:
             fields["email"] = email
 
-        if password and password_current:
+        if password:
+            # passwordCurrent MUST be present when changing password
+            if not password_current:
+                payload = {
+                    "status": JsonStatus.INVALID_ARGUMENT
+                }
+                return jsonify_response(payload, 403)
+
             # If passwordCurrent is not correct, return 403
             if users._verify_password(password_current, user_id) is False:
                 payload = {
