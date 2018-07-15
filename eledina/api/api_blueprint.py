@@ -204,9 +204,8 @@ def login():
     """
     /login: Login the user and generate an access token
 
-    # TODO allow username login
     Fields:
-        email: str
+        primary: str - can be either email or username
         password: str
 
     Statuses:
@@ -245,6 +244,87 @@ def login():
             "token": new_token
         }
         return jsonify_response(payload)
+
+
+@api.route("/user", methods=["GET", "PATCH"])
+@require_token
+@token_rate_limit
+def user_manage(user_id: int):
+    """
+    /user: Get or update user data
+
+    Fields (any of):
+        username: str
+        fullname: str
+        email: str
+
+        password: str - "passwordCurrent" must be included
+        passwordCurrent: str
+
+    Statuses:
+        WRONG_LOGIN_INFO: passwordCurrent was invalid
+        INVALID_ARGUMENT: an invalid argument was passed or the id was invalid
+        USER_ALREADY_EXISTS: username or email is already registered
+        OK: everything ok, user fields updated
+
+    :return: JSON(status)
+    """
+    data = loads(request.data)
+
+    # TODO high rate-limiting for username and other changes
+    if request.method == "PATCH":
+        # Parse fields
+        fields = {}
+
+        username = data.get("username")
+        fullname = data.get("fullname")
+        email = data.get("email")
+        password = data.get("password")
+        password_current = data.get("passwordCurrent")
+
+        # Add fields to "fields"
+        if username:
+            fields["username"] = username
+        if fullname:
+            fields["fullname"] = fullname
+
+        if email:
+            fields["email"] = email
+
+        if password:
+            # passwordCurrent MUST be present when changing password
+            if not password_current:
+                payload = {
+                    "status": JsonStatus.INVALID_ARGUMENT
+                }
+                return jsonify_response(payload, 403)
+
+            # If passwordCurrent is not correct, return 403
+            if users._verify_password(password_current, user_id) is False:
+                payload = {
+                    "status": JsonStatus.WRONG_LOGIN_INFO
+                }
+                return jsonify_response(payload, 403)
+            # Otherwise add to fields
+            fields["password"] = password
+
+        try:
+            users.update_user(user_id, fields)
+        except ForbiddenArgument:
+            payload = {
+                "status": JsonStatus.INVALID_ARGUMENT
+            }
+            return jsonify_response(payload, 400)
+        except (UsernameAlreadyExists, EmailAlreadyRegistered):
+            payload = {
+                "status": JsonStatus.USER_ALREADY_EXISTS
+            }
+            return jsonify_response(payload, 403)
+        else:
+            payload = {
+                "status": JsonStatus.OK
+            }
+            return jsonify_response(payload)
 
 
 @api.route("/blog/new", methods=["POST"])

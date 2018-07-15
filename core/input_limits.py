@@ -2,9 +2,15 @@
 
 
 class UserLimits:
+    USERNAME_MIN_LENGTH = 6
     USERNAME_MAX_LENGTH = 20
+
+    FULLNAME_MIN_LENGTH = 4
     FULLNAME_MAX_LENGTH = 60  # 30 for first name and 30 for last
-    EMAIL_MAX_LENGTH = 254
+
     EMAIL_MIN_LENGTH = 3
+    EMAIL_MAX_LENGTH = 254
+
+    PASSWORD_MIN_LENGTH = 8
     PASSWORD_MAX_LENGTH = 254
 

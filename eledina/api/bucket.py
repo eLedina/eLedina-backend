@@ -31,7 +31,7 @@ class Bucket:
 
 
 ip_buckets = {}
-token_buckets = {}
+user_buckets = {}
 
 
 def _send_429(bucket):
@@ -73,19 +73,19 @@ def ip_rate_limit(fn):
 
 def token_rate_limit(fn):
     @wraps(fn)
-    def inner(token, *args, **kwargs):
+    def inner(user_id, *args, **kwargs):
         # Add a bucket if not present
-        if not token_buckets.get(token):
+        if not user_buckets.get(user_id):
             b = Bucket()
             b.action()
-            token_buckets[token] = b
+            user_buckets[user_id] = b
         # Otherwise, verify that the user has some requests left in this time period
         else:
-            bucket = token_buckets[token]
+            bucket = user_buckets[user_id]
 
             if not bucket.action():
                 _send_429(bucket)
 
-        return fn(*args, **kwargs)
+        return fn(user_id, *args, **kwargs)
 
     return inner
