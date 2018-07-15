@@ -3,6 +3,7 @@ import logging
 
 from .util import Singleton, decode
 from .redis import RedisData, RedisCache
+from .types_ import FieldUpdateType
 
 
 log = logging.getLogger(__name__)
@@ -43,14 +44,35 @@ class CacheGenerator(metaclass=Singleton):
     def cache_single_user(self, user_id: int):
         user = decode(self.rd.hgetall(f"user:{user_id}"))
 
-        username = user["name"]
+        username = user["username"]
         email = user["email"]
 
-        self.rc.hset("user:by_username", username, user_id)
-        self.rc.hset("user:by_email", email, user_id)
+        pipe = self.rc.pipeline()
+
+        pipe.hset("user:by_username", username, user_id)
+        pipe.hset("user:by_email", email, user_id)
+
+        pipe.execute()
+
+    def cache_user_field_update(self, user_id: int, update_type: FieldUpdateType, previous: str, new: str):
+        """
+        Caches only one field update. Deletes the old cached field and puts the new one in.
+
+        This function is necessary for fields:
+            username: str
+            email: str
+        """
+        # This should be called when the 'username' field is updated
+        pipe = self.rc.pipeline()
+
+        pipe.hdel(update_type, previous)
+        pipe.hset(update_type, new, user_id)
+
+        pipe.execute()
+        log.debug(f"Updated single user field: {update_type}")
 
     ##############################
-    # INDIVIDUAL CACHE GENERATORS
+    # CACHE GENERATORS
     ##############################
     def _gen_user_cache(self):
         # USER cache

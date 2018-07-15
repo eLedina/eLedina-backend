@@ -7,6 +7,7 @@ from .exceptions import ForbiddenArgument, LoginFailed, UsernameAlreadyExists, E
 from .input_limits import UserLimits
 from .config import SALT, ROUNDS
 from .cachemanager import CacheGenerator
+from .types_ import FieldUpdateType
 
 from .redis import RedisData, RedisCache
 
@@ -87,36 +88,60 @@ class Users(metaclass=Singleton):
     def _user_exists(self, username: str) -> bool:
         return self.rc.hexists("user:by_username", username)
 
+    @staticmethod
+    def _validate_user_fields(fields: dict):
+        """
+        Universal check for user fields
+
+        :param fields: dict containing key-value pairs for user attributes
+        :raise: ForbiddenArgument if invalid
+        :return: bool
+        """
+        # Checks
+        for k, v in fields.items():
+            if k == "username":
+                if len(v) > UserLimits.USERNAME_MAX_LENGTH or len(v) < UserLimits.USERNAME_MIN_LENGTH:
+                    raise ForbiddenArgument("invalid username")
+
+            elif k == "fullname":
+                if len(v) > UserLimits.FULLNAME_MAX_LENGTH or len(v) < UserLimits.USERNAME_MIN_LENGTH:
+                    raise ForbiddenArgument("invalid full name")
+
+            elif k == "email":
+                if not is_email(v) or len(v) > UserLimits.EMAIL_MAX_LENGTH or len(v) < UserLimits.EMAIL_MIN_LENGTH:
+                    raise ForbiddenArgument("invalid email")
+
+            elif k == "password":
+                if len(v) > UserLimits.PASSWORD_MAX_LENGTH or len(v) < UserLimits.PASSWORD_MIN_LENGTH:
+                    raise ForbiddenArgument("invalid password")
+
     # USER CREATION
     def register_user(self, username: str, fullname: str, email: str, password: str) -> str:
         """
         Registers a new user
         """
-        # Checks
-        if not is_email(email) or len(email) > UserLimits.EMAIL_MAX_LENGTH:
-            raise ForbiddenArgument("invalid email")
-        if len(username) > UserLimits.USERNAME_MAX_LENGTH:
-            raise ForbiddenArgument("username too long")
-        if len(fullname) > UserLimits.FULLNAME_MAX_LENGTH:
-            raise ForbiddenArgument("name too long")
-        if len(password) > UserLimits.PASSWORD_MAX_LENGTH:
-            raise ForbiddenArgument("password too long")
+        payload = {
+            "username": username,
+            "fullname": fullname,
+            "email": email,
+            "password": password
+        }
+        # Verify fields
+        self._validate_user_fields(payload)
 
+        # Check if users already exist
         if self.rc.hexists("user:by_username", username):
             raise UsernameAlreadyExists
-
         if self.rc.hexists("user:by_email", email):
             raise EmailAlreadyRegistered
 
-        payload = {
-            "name": username,
-            "fullname": fullname,
-            "email": email,
+        payload.update({
             "password": self._hash_password(password),
             "reg_on": int(time.time())
             # role defaults to USER (0)
             # about defaults to empty
-        }
+        })
+
         # Generate id and set info
         user_id = gen_id()
         self.rd.hmset(f"user:{user_id}", payload)
@@ -138,12 +163,13 @@ class Users(metaclass=Singleton):
         :param: primary: Primary identification (email or username)
         :return: Token to be used on sequential requests
         """
-        # Get userid from email
+        # Validate fields
         if len(primary) < UserLimits.EMAIL_MIN_LENGTH or len(primary) > UserLimits.EMAIL_MAX_LENGTH:
             raise ForbiddenArgument("invalid primary")
-        if len(password) > UserLimits.PASSWORD_MAX_LENGTH:
-            raise ForbiddenArgument("password too long")
 
+        self._validate_user_fields({"password": password})
+
+        # Get user_id from email
         user_id = decode(self.rc.hget("user:by_email", primary))
         # User didn't pass email, but username
         if not user_id:
@@ -166,7 +192,7 @@ class Users(metaclass=Singleton):
         Returns a userid from the provided token - used on requests with restricted access to verify user
         :return: user id
         """
-        return self.rd.hget("auth:by_token", token)
+        return decode(self.rd.hget("auth:by_token", token))
 
     def _get_user_attr(self, user_id: int, attr: str) -> str:
         """
@@ -187,6 +213,50 @@ class Users(metaclass=Singleton):
 
         return decode(self.rd.hget(f"user:{user_id}", attr))
 
+    def _set_user_field(self, user_id: int, field: str, value: str, data):
+        """
+        Sets a users field to a value
+
+        :param: user_id - ID of the user you want to modify
+        :param: field - the field you want to update
+        :param: value - what value to set the field to
+        :param: data - user fields before update for caching
+        """
+        if field not in Users.USER_ATTR_WHITELIST:
+            raise ForbiddenArgument("invalid field")
+
+        # Do an assortment of checks
+        if field == "username" and self.rc.hexists("user:by_username", value):
+            raise UsernameAlreadyExists("username taken")
+        if field == "email" and self.rc.hexists("user:by_email", value):
+            raise EmailAlreadyRegistered("email already registered")
+        if field == "password":
+            raise ForbiddenArgument("can't update password via _set_user_field")
+        if field == "reg_on":
+            raise ForbiddenArgument("can't update reg_on via _set_user_field")
+
+        response = decode(self.rd.hset(f"user:{user_id}", field, value))
+
+        # Update cache if needed
+        if field == "username":
+            prev = data["username"]
+            self.cache.cache_user_field_update(user_id, FieldUpdateType.USERNAME_UPDATE, prev, value)
+        elif field == "email":
+            prev = data["email"]
+            self.cache.cache_user_field_update(user_id, FieldUpdateType.EMAIL_UPDATE, prev, value)
+
+    def update_user(self, user_id: int, fields: dict):
+        if not self._is_valid_userid(user_id):
+            raise ForbiddenArgument("invalid user_id")
+
+        self._validate_user_fields(fields)
+        # _set_user_field needs user data before update for caching
+        user_data = self.get_user_info(user_id)
+
+        # Iterates though fields and sets them in db
+        update = all([self._set_user_field(user_id, f, v, user_data) for f, v in fields.items()])
+        return update
+
     ###################
     # GETTER FUNCTIONS
     # THESE NEED ID'S
@@ -194,7 +264,11 @@ class Users(metaclass=Singleton):
     def get_user_info(self, user_id: int) -> dict:
         data = decode(self.rd.hgetall(f"user:{user_id}"))
         # passing password is not good even if hashed, so we remove it
-        del data["password"]
+        try:
+            del data["password"]
+        except KeyError:
+            pass
+
         return data
 
     def get_username(self, user_id: int) -> str:
