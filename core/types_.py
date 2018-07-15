@@ -16,3 +16,8 @@ class JsonStatus:
 
     USER_ALREADY_EXISTS = "user_already_exists"
     EMAIL_ALREADY_REGISTERED = "email_registered"
+
+
+class FieldUpdateType:
+    USERNAME_UPDATE = "user:by_username"
+    EMAIL_UPDATE = "user:by_email"

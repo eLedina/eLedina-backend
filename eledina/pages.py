@@ -25,7 +25,7 @@ users = Users()
 @pages.before_request
 def before_request():
     ######################################
-    # 1. ADD ABILITY TO CHECK RENDER TIME
+    # 1. ADD ABILITY TO CHECK REQUEST TIME
     # via g.render_time()
     # Adapted from https://gist.github.com/lost-theory/4521102
     ######################################
@@ -42,8 +42,10 @@ def before_request():
     if access_token is not None:
         # get user id
         user_id = users.verify_token(access_token)
+        log.debug(f"From token got userid: {user_id}")
+
         if not user_id:
-            return abort(400)
+            return abort(403)
 
         user_info = users.get_user_info(int(user_id))
         # set 'g' to include logged in user info
