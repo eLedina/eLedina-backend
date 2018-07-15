@@ -55,17 +55,21 @@ def before_request():
 
 
 # This renders all pages normally
+@pages.route("/")
 @pages.route("/<path:template>")
-def page_render(template):
-    t = str(template)
-    if not t.endswith(".html") and not t.endswith(valid_extensions):
-        t += ".html"
+def page_render(template=None):
+    if template is None:
+        # index.html route triggered
+        template = "index.html"
 
-    t_full = os.path.join("templates", t)
+    if not template.endswith(".html") and not template.endswith(valid_extensions):
+        template += ".html"
+
+    t_full = os.path.join("templates", template)
     # TODO check if this can be exploited
     if not os.path.isfile(t_full):
         log.info(f"Template requested via page_render() was not found: {t_full}")
         return abort(404)
 
-    return render_template(t)
+    return render_template(template)
 

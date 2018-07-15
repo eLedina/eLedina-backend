@@ -6,11 +6,6 @@ app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
 
 
-# index.html
-@app.route("/")
-def index():
-    return render_template("index.html", ip=request.remote_addr)
-
 # 404 error
 @app.errorhandler(404)
 def page_not_found(e):
