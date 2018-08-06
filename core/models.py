@@ -328,3 +328,43 @@ class Blogs(metaclass=Singleton):
             }
 
         return bpack
+
+
+class Learning(metaclass=Singleton):
+
+    def __init__(self):
+        self.rd = RedisData()
+        self.rc = RedisCache()
+
+    def uploadQuestion(self, title: str, content: str, date: str, subject: str) -> str:
+        # Package form as gotten from api_blueprint.py
+        question = {
+            "title": title,
+            "content": content,
+            "date": date,
+            "subject": subject,
+            "comments": "",
+            "status": "NEODGOVORJENO"
+        }
+
+        questionid = gen_id()
+        self.rd.hmset(f"question:{questionid}", question)
+
+    def getQuestions(self):
+        qpack = {}
+
+        for id in self.rd.scan_iter(match="question:*"):
+            question = decode(self.rd.hgetall(id))
+            title = question.get("title")
+            date = question.get("date")
+            subject = question.get("subject")
+            status = question.get("status")
+            id = id.decode('utf-8')
+
+            qpack[id] = {
+                "title": title,
+                "date": date,
+                "subject": subject,
+                "status": status
+            }
+        return qpack

@@ -10,7 +10,7 @@ except ImportError:
 from ..flask_util import jsonify_response
 from .bucket import ip_rate_limit, token_rate_limit
 from core.exceptions import UsernameAlreadyExists, ForbiddenArgument, LoginFailed, EmailAlreadyRegistered
-from core.models import Users, Blogs
+from core.models import Users, Blogs, Learning
 from core.cachemanager import CacheGenerator
 from core.types_ import JsonStatus
 
@@ -25,6 +25,7 @@ api = Blueprint("api", __name__,
 
 users = Users()
 blogs = Blogs()
+learning = Learning()
 CacheGenerator().generate_cache()
 
 
@@ -353,3 +354,28 @@ def blog_get():
     bpack = blogs.get_blog()
 
     return jsonify_response(bpack)
+
+
+@api.route("/learning/new", methods=["POST"])
+@ip_rate_limit
+def learning_new():
+    print(request.data)
+    body = loads(request.data)
+
+    title = body.get("title")
+    content = body.get("content")
+    date = body.get("date")
+    subject = body.get("subject")
+
+    learning.uploadQuestion(title, content, date, subject)
+    blogpack = {
+        "status": JsonStatus.OK,
+    }
+    return jsonify_response(blogpack)
+
+
+@api.route("/learning/list", methods=["GET"])
+@ip_rate_limit
+def learning_get():
+    qpack = learning.getQuestions()
+    return jsonify_response(qpack)
