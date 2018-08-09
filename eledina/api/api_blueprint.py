@@ -379,3 +379,11 @@ def learning_new():
 def learning_get():
     qpack = learning.getQuestions()
     return jsonify_response(qpack)
+
+
+"""
+@api.route("/learning/question", methods=["GET"])
+@ip_rate_limit
+def learning_question():
+    qpack =
+"""
