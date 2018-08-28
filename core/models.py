@@ -296,12 +296,13 @@ class Blogs(metaclass=Singleton):
         self.rd = RedisData()
         self.rc = RedisCache()
 
-    def upload_blog(self, title: str, content: str, date: str) -> str:
+    def upload_blog(self, title: str, content: str, date: str, author: str) -> str:
         # Package form as gotten from api_blueprint.py
         blogpack = {
             "title": title,
             "content": content,
-            "date": date
+            "date": date,
+            "author": author
         }
 
         # Generates blog ID
@@ -319,12 +320,14 @@ class Blogs(metaclass=Singleton):
             content = blog.get("content")
             date = blog.get("date")
             id = id.decode('utf-8')
+            author = blog.get("author")
 
             bpack[id] = {
                 "title": title,
                 "content": content,
                 # Since intiger won't work, it's a string
-                "date": str(date)
+                "date": str(date),
+                "author": author
             }
 
         return bpack
@@ -336,7 +339,7 @@ class Learning(metaclass=Singleton):
         self.rd = RedisData()
         self.rc = RedisCache()
 
-    def uploadQuestion(self, title: str, content: str, date: str, subject: str) -> str:
+    def uploadQuestion(self, title: str, content: str, date: str, subject: str, author: str) -> str:
         # Package form as gotten from api_blueprint.py
         question = {
             "title": title,
@@ -344,7 +347,8 @@ class Learning(metaclass=Singleton):
             "date": date,
             "subject": subject,
             "comments": "",
-            "status": "NEODGOVORJENO"
+            "status": "NEODGOVORJENO",
+            "author": author
         }
 
         questionid = gen_id()
@@ -360,11 +364,13 @@ class Learning(metaclass=Singleton):
             subject = question.get("subject")
             status = question.get("status")
             id = id.decode('utf-8')
+            author = question.get("author")
 
             qpack[id] = {
                 "title": title,
                 "date": date,
                 "subject": subject,
-                "status": status
+                "status": status,
+                "author": author
             }
         return qpack

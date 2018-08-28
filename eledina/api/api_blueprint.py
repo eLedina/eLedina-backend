@@ -337,9 +337,10 @@ def blog_new():
     title = body.get("title")
     content = body.get("content")
     date = body.get("date")
+    author = body.get("author")
 
     # Class and function imported from models.py
-    blogs.upload_blog(title, content, date)
+    blogs.upload_blog(title, content, date, author)
     blogpack = {
         "status": JsonStatus.OK,
     }
@@ -366,8 +367,9 @@ def learning_new():
     content = body.get("content")
     date = body.get("date")
     subject = body.get("subject")
+    author = body.get("author")
 
-    learning.uploadQuestion(title, content, date, subject)
+    learning.uploadQuestion(title, content, date, subject, author)
     blogpack = {
         "status": JsonStatus.OK,
     }
