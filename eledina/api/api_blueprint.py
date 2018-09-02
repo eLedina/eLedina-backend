@@ -350,10 +350,19 @@ def blog_new():
 
 @api.route("/blog/list", methods=["GET"])
 @ip_rate_limit
-def blog_get():
+def blog_list():
     # Class and function imported from models.py
-    bpack = blogs.get_blog()
+    bpack = blogs.blogs_list()
 
+    return jsonify_response(bpack)
+
+
+@api.route("/blog/get", methods=["POST"])
+@ip_rate_limit
+def blog_get():
+    id = loads(request.data)
+
+    bpack = blogs.get_blog(id)
     return jsonify_response(bpack)
 
 

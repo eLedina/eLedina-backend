@@ -310,21 +310,19 @@ class Blogs(metaclass=Singleton):
         # Stores data inside Redis Data
         self.rd.hmset(f"blog:{blogid}", blogpack)
 
-    def get_blog(self):
+    def blogs_list(self):
         bpack = {}
 
         # Searches for every key with blog:... and gets it's data
         for id in self.rd.scan_iter(match="blog:*"):
             blog = decode(self.rd.hgetall(id))
             title = blog.get("title")
-            content = blog.get("content")
             date = blog.get("date")
             id = id.decode('utf-8')
             author = blog.get("author")
 
             bpack[id] = {
                 "title": title,
-                "content": content,
                 # Since intiger won't work, it's a string
                 "date": str(date),
                 "author": author
@@ -332,6 +330,10 @@ class Blogs(metaclass=Singleton):
 
         return bpack
 
+    def get_blog(self, id):
+        bpack = {}
+        bpack = decode(self.rd.hgetall(f"blog:{id}"))
+        return bpack
 
 class Learning(metaclass=Singleton):
 
@@ -359,6 +361,7 @@ class Learning(metaclass=Singleton):
 
         for id in self.rd.scan_iter(match="question:*"):
             question = decode(self.rd.hgetall(id))
+            print(question)
             title = question.get("title")
             date = question.get("date")
             subject = question.get("subject")
@@ -377,20 +380,5 @@ class Learning(metaclass=Singleton):
 
     def getQuestion(self, id):
         qpack = {}
-        question = self.rd.hmget("question:", id)
-        print(question)
-        """title = question.get("title")
-        date = question.get("date")
-        subject = question.get("subject")
-        status = question.get("status")
-        id = id.decode('utf-8')
-        author = question.get("author")
-
-        qpack[id] = {
-            "title": title,
-            "date": date,
-            "subject": subject,
-            "status": status,
-            "author": author
-        }
-        return qpack"""
+        qpack = decode(self.rd.hgetall(f"question:{id}"))
+        return qpack
