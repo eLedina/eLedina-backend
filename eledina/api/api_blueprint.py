@@ -360,7 +360,6 @@ def blog_get():
 @api.route("/learning/new", methods=["POST"])
 @ip_rate_limit
 def learning_new():
-    print(request.data)
     body = loads(request.data)
 
     title = body.get("title")
@@ -383,9 +382,10 @@ def learning_get():
     return jsonify_response(qpack)
 
 
-"""
-@api.route("/learning/question", methods=["GET"])
+@api.route("/learning/question", methods=["POST"])
 @ip_rate_limit
 def learning_question():
-    qpack =
-"""
+    id = loads(request.data)
+
+    qpack = learning.getQuestion(id)
+    return jsonify_response(qpack)

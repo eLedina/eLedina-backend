@@ -374,3 +374,23 @@ class Learning(metaclass=Singleton):
                 "author": author
             }
         return qpack
+
+    def getQuestion(self, id):
+        qpack = {}
+        question = self.rd.hmget("question:", id)
+        print(question)
+        """title = question.get("title")
+        date = question.get("date")
+        subject = question.get("subject")
+        status = question.get("status")
+        id = id.decode('utf-8')
+        author = question.get("author")
+
+        qpack[id] = {
+            "title": title,
+            "date": date,
+            "subject": subject,
+            "status": status,
+            "author": author
+        }
+        return qpack"""
